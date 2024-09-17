@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
     cl_device_id device_id = NULL;   
     cl_uint ret_num_devices;
     cl_uint ret_num_platforms;
+    // NOTE: MAY FAIL IF MULTIPLE PLATFORMS. SHOULD DO A LOOP TO TEST!
     cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
     if (!ret) {
         SDL_Log("Detected platform id: %d", platform_id);
@@ -193,7 +194,7 @@ int main(int argc, char** argv) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //SDL_Color tex_pre[WIDTH*HEIGHT];
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, WIDTH, HEIGHT);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_FLOAT, NULL);
+    glTexSubImage2D(GL_TEXTURE_2D, 1, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_FLOAT, NULL);
     //glGenerateMipmap(GL_TEXTURE_2D);
 
     //cl_mem texture_buff = clCreateFromGLRenderbuffer(context, CL_MEM_READ_WRITE, colorRenderbuffer, &ret);
