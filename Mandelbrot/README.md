@@ -2,6 +2,8 @@
 
 This code was originally written by NVIDIA for their CUDA Samples. I trimmed some boilerplate code down, removed excessive comments (including copyright notices), removed code-fluff (including bits of error-checking), and slightly modified some kernel logic to prove functionality.
 
+I trimmed the code for the sake of learning for an upcoming project involving GPU/GPGPU computation.
+
 # Mandelbrot - Mandelbrot
 
 ## Description
