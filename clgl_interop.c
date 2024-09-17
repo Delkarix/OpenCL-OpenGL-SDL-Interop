@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     //SDL_Renderer* renderer;
 
     // Initialize SDL and test for success
-    if (SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("[ERROR SDL_INIT_VIDEO] %s\n", SDL_GetError());
         exit(1);
     }
@@ -57,6 +57,8 @@ int main(int argc, char** argv) {
     gluOrtho2D(0, WIDTH, HEIGHT, 0);
     glMatrixMode(GL_MODELVIEW);
     glEnable( GL_TEXTURE_2D );
+
+    SDL_GL_SetSwapInterval(0);
 
 
 
@@ -106,7 +108,6 @@ int main(int argc, char** argv) {
     cl_device_id device_id = NULL;   
     cl_uint ret_num_devices;
     cl_uint ret_num_platforms;
-    // NOTE: MAY FAIL IF MULTIPLE PLATFORMS. SHOULD DO A LOOP TO TEST!
     cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
     if (!ret) {
         SDL_Log("Detected platform id: %d", platform_id);
@@ -115,6 +116,11 @@ int main(int argc, char** argv) {
         SDL_Log("Could not detect the platform. Error code: %d", ret);
         return -1;
     }
+    SDL_Log("Platform count: %d\n", ret_num_platforms);
+    unsigned char str[2048] = {0};
+    size_t str_size = sizeof(str);
+    clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, 2048, str, &str_size);
+    SDL_Log("Platform Name: %s\n", str);
 
     ret = clGetDeviceIDs( platform_id, CL_DEVICE_TYPE_DEFAULT, 1, &device_id, &ret_num_devices);
     if (!ret) {
@@ -125,6 +131,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+        SDL_Log("Device count: %d\n", ret_num_devices);
+
     cl_context_properties props[] = {
         CL_CONTEXT_PLATFORM, (cl_context_properties)platform_id,
         CL_GL_CONTEXT_KHR, (cl_context_properties)glcontext,
@@ -132,7 +140,15 @@ int main(int argc, char** argv) {
         0
     };
     size_t _s;
-    ret = clGetGLContextInfoKHR(props, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(device_id), &device_id, &_s);
+
+cl_int (*_clGetGLContextInfoKHR)(
+    const cl_context_properties* properties,
+    cl_gl_context_info param_name,
+    size_t param_value_size,
+    void* param_value,
+    size_t* param_value_size_ret) = clGetExtensionFunctionAddressForPlatform(platform_id, "clGetGLContextInfoKHR");
+
+    ret = _clGetGLContextInfoKHR(props, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(device_id), &device_id, &_s);
     if (!ret || _s > 0) {
         SDL_Log("Retrieved GL Context info");
     }
@@ -170,7 +186,6 @@ int main(int argc, char** argv) {
     cl_GLuint texture_id; // = SDL_GetNumberProperty(SDL_GetTextureProperties(main_buff), SDL_PROP_TEXTURE_OPENGL_TEXTURE_NUMBER, 0);
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
-
     //cl_GLuint frame_buffer;
     //cl_GLuint colorRenderbuffer;
     
@@ -198,7 +213,7 @@ int main(int argc, char** argv) {
     //glGenerateMipmap(GL_TEXTURE_2D);
 
     //cl_mem texture_buff = clCreateFromGLRenderbuffer(context, CL_MEM_READ_WRITE, colorRenderbuffer, &ret);
-    cl_mem texture_buff = clCreateFromGLTexture2D(context, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, texture_id, &ret);
+    cl_mem texture_buff = clCreateFromGLTexture(context, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, texture_id, &ret);
     if (!ret) {
         SDL_Log("Acquired the OpenGL texture.");
     }
@@ -220,7 +235,7 @@ int main(int argc, char** argv) {
  
     // Build the program
     char build_options[256];
-    snprintf(build_options, 256, "-cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -cl-fast-relaxed-math -cl-uniform-work-group-size -cl-no-subgroup-ifp -D WIDTH=%d -D HEIGHT=%d", WIDTH, HEIGHT); // Format the macros
+    snprintf(build_options, 256, "-cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -cl-fast-relaxed-math -D WIDTH=%d -D HEIGHT=%d", WIDTH, HEIGHT); // Format the macros
     ret = clBuildProgram(program, 1, &device_id, build_options, NULL, NULL);
     if (!ret) {
         SDL_Log("Successfully built the program");
