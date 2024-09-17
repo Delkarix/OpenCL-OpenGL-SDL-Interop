@@ -1,3 +1,7 @@
+NOTE: I DID NOT WRITE THE ORIGINAL CODE!!! The original can be  found [here](https://github.com/NVIDIA/cuda-samples/tree/master/Samples/5_Domain_Specific/Mandelbrot).
+
+This code was originally written by NVIDIA for their CUDA Samples. I trimmed some boilerplate code down, removed excessive comments (including copyright notices), removed code-fluff (including bits of error-checking), and slightly modified some kernel logic to prove functionality.
+
 # Mandelbrot - Mandelbrot
 
 ## Description
