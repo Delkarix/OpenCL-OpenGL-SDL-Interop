@@ -209,7 +209,7 @@ cl_int (*_clGetGLContextInfoKHR)(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //SDL_Color tex_pre[WIDTH*HEIGHT];
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, WIDTH, HEIGHT);
-    glTexSubImage2D(GL_TEXTURE_2D, 1, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_FLOAT, NULL);
+    //glTexSubImage2D(GL_TEXTURE_2D, 1, 0, 0, WIDTH, HEIGHT, GL_RGBA, GL_FLOAT, NULL);
     //glGenerateMipmap(GL_TEXTURE_2D);
 
     //cl_mem texture_buff = clCreateFromGLRenderbuffer(context, CL_MEM_READ_WRITE, colorRenderbuffer, &ret);
@@ -271,9 +271,13 @@ cl_int (*_clGetGLContextInfoKHR)(
         SDL_Log("Failed to acquire the texture object for OpenCL\n");
         return -1;
     }
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &texture_buff);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    
     int curr_ticks_fps = SDL_GetTicks();
     int fps = 0;
     int frames = 0;
+    
     // Continuously listen for events.
     SDL_Event event;
     while (!finish) {
@@ -327,7 +331,7 @@ cl_int (*_clGetGLContextInfoKHR)(
 
         
 
-        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &texture_buff);
+        
         float r = (float)(SDL_rand(128))/(SDL_rand(128) + 128);
         float g = (float)(SDL_rand(128))/(SDL_rand(128) + 128);
         float b = (float)(SDL_rand(128))/(SDL_rand(128) + 128);
@@ -352,7 +356,6 @@ cl_int (*_clGetGLContextInfoKHR)(
 
         
         //glClear(GL_COLOR_BUFFER_BIT);
-        glBindTexture(GL_TEXTURE_2D, texture_id);
         glBegin( GL_QUADS );
             glTexCoord2f( 0.f, 0.f ); glVertex2f(           0.f,            0.f );
             glTexCoord2f( 1.f, 0.f ); glVertex2f( WIDTH,            0.f );
