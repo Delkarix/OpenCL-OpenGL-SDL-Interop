@@ -123,7 +123,7 @@ int main() {
         .num_readwrite_storage_textures = 1,
         .num_uniform_buffers = 1,
         
-        .threadcount_x = 100,
+        .threadcount_x = 64,
         .threadcount_y = 1,
         .threadcount_z = 1,
         .props = 0
@@ -199,7 +199,7 @@ int main() {
             // SDL_PushGPUComputeUniformData(command_buffer, 1, &g, 4);
             // SDL_PushGPUComputeUniformData(command_buffer, 1, &b, 4);
 
-            SDL_DispatchGPUCompute(compute_pass, 100, 1, 1);
+            SDL_DispatchGPUCompute(compute_pass, 1, 1, 1);
 
         SDL_EndGPUComputePass(compute_pass);
         
