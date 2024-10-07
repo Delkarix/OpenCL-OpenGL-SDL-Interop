@@ -257,6 +257,8 @@ int main() {
         */
         
 
+        // Blit texture
+        /*
         SDL_GPUBlitInfo blit_info = {
             .source.texture = render_texture,
             .source.w = WIDTH,
@@ -280,6 +282,10 @@ int main() {
             .cycle = 1
         };
         SDL_BlitGPUTexture(command_buffer, &blit_info);
+        */
+        SDL_GPUCopyPass* copy_pass = SDL_BeginGPUCopyPass(command_buffer);
+            SDL_CopyGPUTextureToTexture(copy_pass, &(SDL_GPUTextureLocation){.texture = render_texture}, &(SDL_GPUTextureLocation){.texture = texture}, WIDTH, HEIGHT, 1, 1);
+        SDL_EndGPUCopyPass(copy_pass);
 
         SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(command_buffer);
         // if (!SDL_SubmitGPUCommandBuffer(command_buffer)) {
@@ -290,11 +296,6 @@ int main() {
 
         SDL_WaitForGPUFences(gpu, 0, &fence, 1);
         SDL_ReleaseGPUFence(gpu, fence);
-
-        // blit
-        // command_buffer = SDL_AcquireGPUCommandBuffer(gpu);
-        // SDL_BlitGPUTexture(command_buffer, &blit_info);
-        // SDL_SubmitGPUCommandBuffer(command_buffer);
 
         frames++;
     }
