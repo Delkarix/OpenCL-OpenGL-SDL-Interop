@@ -67,6 +67,11 @@ int main() {
         exit(1);
     }
 
+    if (!SDL_SetGPUSwapchainParameters(gpu, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX)) {
+        printf("[ERROR SDL_SetGPUSwapchainParameters()] %s\n", SDL_GetError());
+        exit(1);
+    }
+
     SDL_GPUTextureCreateInfo texinfo = {
         .type = SDL_GPU_TEXTURETYPE_2D,
         .format = SDL_GetGPUSwapchainTextureFormat(gpu, window),
@@ -135,9 +140,22 @@ int main() {
         exit(1);
     }
 
+    int curr_ticks_fps = SDL_GetTicks();
+    int fps = 0;
+    int frames = 0;
+
     // Continuously listen for events.
     SDL_Event event;
     while (!finish) {
+        int ticks_atm = SDL_GetTicks();
+        if (ticks_atm >= curr_ticks_fps + 1000) {
+            fps = frames;
+            frames = 0;
+            curr_ticks_fps = ticks_atm;
+
+            printf("FPS: %d\n", fps);
+        }
+        
         // Continuously process all events
         while (SDL_PollEvent(&event)) {
             // Test for the different types of events
@@ -199,7 +217,7 @@ int main() {
             // SDL_PushGPUComputeUniformData(command_buffer, 1, &g, 4);
             // SDL_PushGPUComputeUniformData(command_buffer, 1, &b, 4);
 
-            SDL_DispatchGPUCompute(compute_pass, 1, 1, 1);
+            SDL_DispatchGPUCompute(compute_pass, 4, 1, 1);
 
         SDL_EndGPUComputePass(compute_pass);
         
@@ -262,11 +280,23 @@ int main() {
             .cycle = 1
         };
         SDL_BlitGPUTexture(command_buffer, &blit_info);
-        
-        if (!SDL_SubmitGPUCommandBuffer(command_buffer)) {
+
+        SDL_GPUFence* fence = SDL_SubmitGPUCommandBufferAndAcquireFence(command_buffer);
+        // if (!SDL_SubmitGPUCommandBuffer(command_buffer)) {
+        if (!fence) {
             printf("[ERROR SDL_SubmitGPUCommandBuffer()] %s\n", SDL_GetError());
             break;
         }
+
+        SDL_WaitForGPUFences(gpu, 0, &fence, 1);
+        SDL_ReleaseGPUFence(gpu, fence);
+
+        // blit
+        // command_buffer = SDL_AcquireGPUCommandBuffer(gpu);
+        // SDL_BlitGPUTexture(command_buffer, &blit_info);
+        // SDL_SubmitGPUCommandBuffer(command_buffer);
+
+        frames++;
     }
 
     SDL_ReleaseGPUComputePipeline(gpu, compute_pipeline);
